@@ -6,7 +6,7 @@
     "tags": ["通用", "推荐"],
     "author": "Misyra",
     "version": "1.0.0",
-    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/main/tasks/default.json"
+    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/default.json"
   },
   {
     "id": "drcom",
@@ -15,7 +15,7 @@
     "tags": ["DR.COM", "深澜"],
     "author": "Misyra",
     "version": "1.0.0",
-    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/main/tasks/drcom.json"
+    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/drcom.json"
   },
   {
     "id": "selector",
@@ -24,6 +24,6 @@
     "tags": ["模板", "自定义"],
     "author": "Misyra",
     "version": "1.0.0",
-    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/main/tasks/selector.json"
+    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/selector.json"
   }
 ]
