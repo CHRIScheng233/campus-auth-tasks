@@ -6,6 +6,12 @@ Campus-Auth 的校园网登录任务共享仓库。
 
 在 Campus-Auth 的任务管理页面，点击 **从仓库导入** 即可浏览和安装任务。
 
+> 国内用户如访问 GitHub 不稳定，可使用 Gitee 镜像索引：
+> ```
+> https://raw.giteeusercontent.com/Misyra/campus-auth-tasks/raw/master/index.gitee.json
+> ```
+> 该镜像在 `index.gitee.json` 中维护，任务内容与主索引同步。
+
 ## 任务列表
 
 | 任务 | 说明 |

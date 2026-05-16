@@ -116,6 +116,22 @@ Move-Item -Path "temp/hust.json" -Destination "tasks/hust.json"
 }
 ```
 
+### Step 6a: 同步镜像索引 `index.gitee.json`
+
+本仓库维护了一个 Gitee 镜像索引，供国内用户使用。在 `index.gitee.json` 中添加相同条目，仅将 `url` 切换为 Gitee raw 地址：
+
+```json
+{
+  "id": "hust",
+  "name": "华中科技大学校园网登录",
+  "description": "适用于华中科技大学 Dr.COM Portal 认证页面，需先点击密码占位元素激活密码输入框",
+  "tags": ["华中科技大学", "Dr.COM"],
+  "author": "your-github-username",
+  "version": "1.0.0",
+  "url": "https://raw.giteeusercontent.com/Misyra/campus-auth-tasks/raw/master/tasks/hust.json"
+}
+```
+
 **描述优化原则：**
 - 在不改变原意的前提下优化表述，使其更清晰、专业
 - 增加适配学校信息，方便其他用户识别是否适用
@@ -125,12 +141,13 @@ Move-Item -Path "temp/hust.json" -Destination "tasks/hust.json"
 ### Step 7: 提交
 
 ```powershell
-git add tasks/hust.json index.json
+git add tasks/hust.json index.json index.gitee.json
 git commit -m "feat: 添加华中科技大学校园网登录任务"
-git push
+git push origin master && git push gitee master
 ```
 
 > **注意：** 提交中不需要包含 `temp/` 下的文件（已移至 `tasks/`），也不需要包含 `doc/`（编写指南不属于任务提交内容）。
+> `index.gitee.json` 是 Gitee 镜像索引，需同步提交并在两边 remote 都推送。
 
 ## 验证清单
 
@@ -138,6 +155,7 @@ git push
 - [ ] 所有 `eval`/`custom_js` 脚本已审查、无风险
 - [ ] `url` 为 `"{{LOGIN_URL}}"` 或省略
 - [ ] `index.json` 是合法 JSON
+- [ ] `index.gitee.json` 是合法 JSON（URL 为 Gitee raw 地址）
 - [ ] 文件名与 `index.json` 的 `url` 一致
 - [ ] `tasks/` 下有对应文件，`temp/` 下无残留
 - [ ] ID 命名使用学校缩写（如可用）
