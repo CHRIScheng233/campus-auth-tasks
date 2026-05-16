@@ -6,7 +6,7 @@
     "tags": ["通用", "推荐"],
     "author": "Misyra",
     "version": "1.0.0",
-    "url": "https://gitee.com/misyra/campus-auth-tasks/raw/master/tasks/default.json"
+    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/default.json"
   },
   {
     "id": "hust",
@@ -15,6 +15,6 @@
     "tags": ["华中科技大学", "HUST"],
     "author": "anonymous",
     "version": "1.0.0",
-    "url": "https://gitee.com/misyra/campus-auth-tasks/raw/master/tasks/hust.json"
+    "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/hust.json"
   }
 ]

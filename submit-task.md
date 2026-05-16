@@ -112,7 +112,7 @@ Move-Item -Path "temp/hust.json" -Destination "tasks/hust.json"
   "tags": ["华中科技大学", "Dr.COM"],
   "author": "your-github-username",
   "version": "1.0.0",
-  "url": "https://gitee.com/misyra/campus-auth-tasks/raw/master/tasks/hust.json"
+  "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/hust.json"
 }
 ```
 

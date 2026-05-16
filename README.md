@@ -53,7 +53,7 @@ Campus-Auth 的校园网登录任务共享仓库。
      "tags": ["你的学校名", "认证系统型号"],
      "author": "你的GitHub用户名",
      "version": "1.0.0",
-     "url": "https://gitee.com/misyra/campus-auth-tasks/raw/master/tasks/xxx_university.json"
+     "url": "https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/xxx_university.json"
    }
    ```
 
