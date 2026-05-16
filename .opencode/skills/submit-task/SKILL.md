@@ -2,7 +2,7 @@
 
 ## Description
 
-审核并提交 Campus-Auth 任务 JSON 到仓库。处理一条完整的提交流程：安全审查 → 格式修正 → 移至 `tasks/` 目录 → 更新 `index.json` 索引 → 连带 `doc/` 一起提交。
+审核并提交 Campus-Auth 任务 JSON 到仓库。完整流程：安全审查 → 格式修正 → 放入 `temp/`（未审核）→ 确认后移至 `tasks/` → 更新 `index.json` 索引 → 连带 `doc/` 一起提交。
 
 ## When to Use
 
@@ -81,16 +81,12 @@
 使用以下命令修正 JSON 格式：
 
 ```powershell
-# 用 jq 重新格式化（优先）
-cat task.json | jq . > task_formatted.json
-
-# 或用 Python
 python -c "import json; d=json.load(open('task.json','r',encoding='utf-8')); json.dump(d,open('task_fixed.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)"
 ```
 
-### Step 4: 生成文件名
+### Step 4: 将任务放入 temp/（未审核状态）
 
-根据任务信息确定文件名：
+根据任务信息生成文件名：
 
 - 优先使用 `metadata.author` 或 `metadata.school` 生成
 - 回退到 `name` 字段
@@ -99,9 +95,17 @@ python -c "import json; d=json.load(open('task.json','r',encoding='utf-8')); jso
 
 ```python
 import re
-base = name.lower().replace(' ', '_')
+base = (author or school or name).lower().replace(' ', '_')
 filename = re.sub(r'[^a-z0-9_]', '_', base) + '.json'
 ```
+
+将格式化后的文件保存到 `temp/` 目录：
+
+```powershell
+Move-Item -Path "path/to/task_fixed.json" -Destination "temp/{filename}"
+```
+
+`temp/` 目录存放**未审核**的任务，`tasks/` 目录存放**已审核通过**的正式任务。
 
 ### Step 5: 更新 index.json
 
@@ -140,36 +144,39 @@ https://raw.githubusercontent.com/Misyra/campus-auth-tasks/master/tasks/{filenam
 }
 ```
 
-**验证：** 修改后运行 `jq . index.json` 或 `python -c "import json; json.load(open('index.json','r',encoding='utf-8'))"` 确保 JSON 语法正确。
+**验证：** 修改后运行 `python -c "import json; json.load(open('index.json','r',encoding='utf-8'))"` 确保 JSON 语法正确。
 
-### Step 6: 移动任务文件
+### Step 6: 从 temp/ 移入 tasks/
 
-将格式化后的任务 JSON 文件放入 `tasks/` 目录。
+确认安全审查通过后，将任务从 `temp/` 移至 `tasks/`：
 
 ```powershell
-Move-Item -Path "path/to/task.json" -Destination "E:\campus-auth-tasks\tasks\{filename}"
+Move-Item -Path "temp/{filename}" -Destination "tasks/{filename}"
 ```
+
+此时 `tasks/` 下的文件才是正式收录的任务。
 
 ### Step 7: 提交
 
 ```powershell
-git add tasks/{filename} index.json doc/
+git add temp/{filename} tasks/{filename} index.json doc/
 git status   # 确认只有预期文件被暂存
 git commit -m "feat: 添加 {name} 登录任务"
 git push
 ```
 
-**注意：** `doc/` 目录随任务一起提交。
+**注意：** `temp/` 中的未审核文件和 `tasks/` 中的正式文件都需提交（`temp/` 保留提交记录便于追溯），`doc/` 目录随任务一起提交。
 
 ## Verification
 
 提交前必须确认：
 
-- [ ] JSON 语法正确（`jq .` 或 `python -c` 验证）
+- [ ] JSON 语法正确（`python -c` 验证）
 - [ ] 所有 `eval`/`custom_js` 的 `script` 已审查且无风险
 - [ ] `url` 字段为 `"{{LOGIN_URL}}"` 或省略
 - [ ] `index.json` 是合法的 JSON 数组
 - [ ] 任务文件名与 `index.json` 中的 `url` 字段一致
+- [ ] `temp/` 和 `tasks/` 下都有对应文件
 - [ ] `doc/` 目录已包含在提交中
 - [ ] 已向用户报告安全审查结果并得到确认
 
@@ -181,5 +188,7 @@ git push
 用户: 帮我提交这个北京大学的校园网认证任务
 
 Agent: 读取任务JSON → 安全审查 → 格式修正 →
-       生成文件名 pku.json → 更新 index.json →
-       移动到 tasks/pku.json → git add + commit + push
+       保存到 temp/pku.json → 更新 index.json →
+       从 temp/ 移至 tasks/pku.json →
+       git add + commit + push
+```
