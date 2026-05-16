@@ -11,8 +11,6 @@ Campus-Auth 的校园网登录任务共享仓库。
 | 任务 | 说明 |
 |------|------|
 | **通用登录** | 语义识别表单，兼容大多数认证页面 |
-| **DR.COM 模板** | 适用于 DR.COM / 深澜认证系统 |
-| **选择器模板** | CSS 选择器定位，适合已知页面结构 |
 
 ## 贡献
 
@@ -27,7 +25,11 @@ Campus-Auth 的校园网登录任务共享仓库。
 3. 填写学校名称、认证系统型号等信息，上传任务 JSON 文件
 4. 提交后由维护者审核并合并到仓库
 
-### 提交 Pull Request（推荐）
+### 使用 AI 自动提交（推荐）
+
+如果你是 AI 编程助手（如 Claude Code、Cursor 等），可以直接参考 [submit-task.md](submit-task.md) 中的流程，AI 会自动完成安全审查、格式修正、文件移动和索引更新。
+
+### 手动提交 Pull Request
 
 **第一步：Fork 仓库**
 
@@ -40,8 +42,9 @@ Campus-Auth 的校园网登录任务共享仓库。
    git clone https://github.com/你的用户名/campus-auth-tasks.git
    cd campus-auth-tasks
    ```
-2. 将导出的任务 JSON 文件放入 `tasks/` 目录，文件名建议使用小写字母和下划线（如 `xxx_university.json`）
-3. 编辑 `index.json`，在数组末尾添加你的任务条目：
+2. 将导出的任务 JSON 文件放入 `temp/` 目录（未审核），文件名建议使用小写字母和下划线（如 `xxx_university.json`）
+3. 确认任务安全无风险后，从 `temp/` 移入 `tasks/` 目录
+4. 编辑 `index.json`，在数组末尾添加你的任务条目：
    ```json
    {
      "id": "xxx_university",
@@ -57,7 +60,7 @@ Campus-Auth 的校园网登录任务共享仓库。
 **第三步：提交并创建 PR**
 
 ```bash
-git add tasks/xxx_university.json index.json
+git add temp/xxx_university.json tasks/xxx_university.json index.json
 git commit -m "feat: 添加 XXX 大学登录任务"
 git push origin main
 ```
