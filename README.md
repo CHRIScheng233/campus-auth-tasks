@@ -83,7 +83,7 @@ git push origin main
     "device": "认证设备型号",
     "created": "2025-01-01"
   },
-  "url": "https://auth.xxx.edu.cn",
+  "url": "{{LOGIN_URL}}",
   "timeout": 20000,
   "variables": {
     "username": "{{USERNAME}}",
