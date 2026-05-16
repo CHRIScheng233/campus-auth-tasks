@@ -68,7 +68,7 @@ Campus-Auth 的校园网登录任务共享仓库。
 ```bash
 git add temp/xxx_university.json tasks/xxx_university.json index.json
 git commit -m "feat: 添加 XXX 大学登录任务"
-git push origin main
+git push origin master
 ```
 
 然后在 GitHub 上打开你的 Fork 页面，点击 **Contribute → Open pull request**，填写说明后提交。
