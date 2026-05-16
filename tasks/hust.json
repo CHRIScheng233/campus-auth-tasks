@@ -1,6 +1,10 @@
 {
-  "name": "连接需要点击密码框的校园网",
-  "description": "适用于一些情况，会先点击密码框，再输入密码",
+  "name": "华中科技大学校园网登录",
+  "description": "适用于华中科技大学校园网认证页面，需先点击密码占位元素激活真实输入框后再输入密码",
+  "metadata": {
+    "author": "anonymous",
+    "school": "华中科技大学"
+  },
   "url": "{{LOGIN_URL}}",
   "timeout": 100000,
   "steps": [
@@ -32,19 +36,19 @@
       "force": true
     },
     {
-      "id": "smart_click_login",
+      "id": "click_login_button",
       "type": "custom_js",
       "description": "识别并点击登录按钮",
       "script": "(() => { const vis = el => { if(!el) return false; const s=getComputedStyle(el); if(!s||s.display==='none'||s.visibility==='hidden') return false; const r=el.getBoundingClientRect(); return r.width>4&&r.height>4; }; const txt = el => String(el.innerText||el.value||el.getAttribute('aria-label')||'').replace(/\\s+/g,'').trim(); const score = el => { const t=txt(el); let s=0; if (/^登录$|^登入$|^用户登录$|^账号登录$|^网络登录$|^上网登录$/.test(t)) s+=50; if (/登录|登入|认证|连接|上网|联网|确定|提交|submit|login|sign.?in/i.test(t)) s+=20; if (/扫码|二维码|短信|微信|支付宝|qq|微博/i.test(t)) s-=30; if (/重置|取消|清空|退出|返回|注册|忘记|forgot|reset|cancel/i.test(t)) s-=20; const tp=String(el.type||'').toLowerCase(); if (tp==='submit') s+=8; if (tp==='button') s+=3; if (el.tagName==='A'&&el.href&&/#|javascript/.test(el.href)) s-=5; return s; }; const all = Array.from(document.querySelectorAll('button,input[type=submit],input[type=button],a[role=button],div[role=button],[class*=btn],[class*=submit]')).filter(vis); const pick = all.slice().sort((a,b)=>score(b)-score(a))[0]; if(!pick||score(pick)<8) throw new Error('未找到登录按钮'); pick.click(); return true; })()"
     },
     {
-      "id": "click_login_button",
+      "id": "click_login_link",
       "type": "click",
       "description": "点击连接按钮",
       "selector": "#loginLink_div"
     },
     {
-      "id": "wait_login_response",
+      "id": "wait_response",
       "type": "sleep",
       "description": "等待页面响应",
       "duration": 2500
@@ -80,12 +84,6 @@
   "on_failure": {
     "message": "登录失败，请检查账号密码或认证地址",
     "screenshot": true
-  },
-  "metadata": {
-    "author": "匿名",
-    "school": "华中科技大学",
-    "device": "Portal",
-    "created": "2025-05-16"
   },
   "id": "hust"
 }
