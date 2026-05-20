@@ -1,0 +1,59 @@
+{
+  "name": "四川大学",
+  "id": "scu",
+  "description": "四川大学认证任务（HK Posi 认证系统，支持运营商选择）",
+  "url": "{{LOGIN_URL}}",
+  "timeout": 30000,
+  "reveal_hidden": true,
+  "variables": {
+    "username": "{{USERNAME}}",
+    "password": "{{PASSWORD}}",
+    "isp": "{{ISP}}"
+  },
+  "steps": [
+    {
+      "id": "input_username",
+      "type": "input",
+      "description": "输入账号",
+      "selector": "#username",
+      "value": "{{username}}"
+    },
+    {
+      "id": "input_password",
+      "type": "input",
+      "description": "输入密码",
+      "selector": "#pwd",
+      "value": "{{password}}"
+    },
+    {
+      "id": "force_select_carrier",
+      "type": "eval",
+      "description": "强制选择运营商（根据 ISP 变量）",
+      "script": "() => { const isp = '{{isp}}'; const map = { '校园网': 0, '中国移动': 1, '中国电信': 2, '中国联通': 3 }; const idx = map[isp]; if (idx !== undefined && typeof selectService === 'function') { const names = ['internet', '移动出口', '电信出口', '联通出口']; const displays = ['校园网', '中国移动', '中国电信', '中国联通']; selectService(names[idx], displays[idx], idx); return true; } return false; }"
+    },
+    {
+      "id": "click_login",
+      "type": "click",
+      "description": "点击登录按钮",
+      "selector": "#loginLink_div"
+    },
+    {
+      "id": "wait_result",
+      "type": "sleep",
+      "description": "等待认证结果",
+      "duration": 3000
+    }
+  ],
+  "on_success": {
+    "message": "登录成功"
+  },
+  "on_failure": {
+    "message": "登录失败",
+    "screenshot": true
+  },
+  "metadata": {
+    "author": "Lycorisssss (GitHub)",
+    "school": "四川大学",
+    "device": "HK Posi 认证系统"
+  }
+}
