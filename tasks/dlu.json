@@ -1,0 +1,57 @@
+{
+  "name": "大连大学校园网登录",
+  "description": "适用于大连大学校园网认证页面，使用通用账号密码登录流程",
+  "metadata": {
+    "author": "2476449565",
+    "school": "大连大学",
+    "device": "未知"
+  },
+  "url": "{{LOGIN_URL}}",
+  "timeout": 30000,
+  "variables": {
+    "username": "{{USERNAME}}",
+    "password": "{{PASSWORD}}"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "type": "input",
+      "description": "输入账号",
+      "selector": "#username",
+      "value": "{{username}}"
+    },
+    {
+      "id": "s2",
+      "type": "input",
+      "description": "输入密码",
+      "selector": "#password",
+      "value": "{{password}}"
+    },
+    {
+      "id": "s3",
+      "type": "click",
+      "description": "点击提交",
+      "selector": "#login-account"
+    },
+    {
+      "id": "wait_for_response",
+      "type": "sleep",
+      "description": "等待认证响应",
+      "duration": 2000
+    }
+  ],
+  "success_conditions": [
+    {
+      "type": "url_matches",
+      "pattern": "success"
+    }
+  ],
+  "on_success": {
+    "message": "登录成功"
+  },
+  "on_failure": {
+    "message": "登录失败",
+    "screenshot": true
+  },
+  "id": "dlu"
+}
