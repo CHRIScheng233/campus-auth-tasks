@@ -35,8 +35,7 @@
     "isp": "{{ISP}}"
   },
   "steps": [],
-  "success_conditions": [],
-  "on_success": { "message": "登录成功" },
+    "on_success": { "message": "登录成功" },
   "on_failure": { "message": "登录失败", "screenshot": true }
 }
 ```
@@ -47,12 +46,13 @@
 |------|------|--------|------|
 | `name` | 是 | — | 任务名称，显示在任务列表中 |
 | `description` | 否 | `""` | 任务描述 |
-| `metadata` | 否 | `{}` | 自由结构的附加信息，执行器不读取，建议放在靠前位置便于阅读。推荐包含 `author`（作者）、`school`（学校名称）、`device`（认证设备型号）、`created`（创建日期）。**分享任务时，`school` 和 `device` 必须通过用户确认，不能无证据猜测** |
+| `metadata` | 否 | `{}` | 自由结构的附加信息（作者、适配型号等），执行器不读取，建议放在靠前位置便于阅读 |
 | `url` | 否 | `""` | 自定义认证地址。**提交/分享任务时请留空**，由用户自行在系统中设置认证地址或手动填入 |
 | `timeout` | 否 | `30000` | 全局超时时间（毫秒） |
 | `variables` | 否 | `{}` | 任务级变量，支持 `{{VAR}}` 模板引用其他变量 |
 | `steps` | 是 | `[]` | 步骤列表，按顺序执行 |
-| `success_conditions` | 否 | `[]` | 成功条件列表，全部满足才算成功；**留空则所有步骤完成即为成功** |
+| `reveal_hidden` | 否 | `false` | 执行前自动显示所有隐藏输入框，适用于深澜/Sangfor 等隐藏输入框场景 |
+| `success_conditions` | 否（已废弃） | — | 原有成功条件字段，系统不再使用 |
 | `on_success` | 否 | `{}` | 成功时的处理，如 `{ "message": "登录成功" }` |
 | `on_failure` | 否 | `{}` | 失败时的处理，如 `{ "message": "登录失败", "screenshot": true }` |
 
@@ -68,7 +68,7 @@
 | `type` | 是 | 步骤类型 |
 | `description` | 否 | 步骤描述，会输出到日志 |
 | `timeout` | 否 | 超时时间（毫秒），默认值因类型而异 |
-| `frame` | 否 | 目标 frame 的 name 或 URL 片段，用于 frameset/iframe 页面 |
+| `frame` | 否 | 目标 frame 的 name、URL 片段或 CSS 选择器（字符串，不支持布尔值），用于 frameset/iframe 页面 |
 
 **扩展字段（extra）：** 步骤中任何未被识别的字段会被自动收集并在序列化时保留，你可以在步骤中添加自定义字段而不影响执行逻辑。
 
@@ -85,15 +85,16 @@
 | `selector` | 是 | — | 元素选择器，多个用逗号分隔 |
 | `value` | 是 | — | 输入值，支持 `{{变量}}` 模板 |
 | `clear` | 否 | `true` | 是否先清空输入框 |
-| `timeout` | 否 | `5000` | 超时时间（毫秒） |
-| `force` | 否 | `false` | 强制模式，跳过可见性检查，用于 `display:none` 的隐藏输入框 |
+| `timeout` | 否 | `10000` | 超时时间（毫秒） |
 
-**`force` 模式说明：** 部分校园网认证页面的输入框是隐藏的（`display:none`），有两种常见模式：
+**隐藏输入框处理：** 部分校园网认证页面的输入框是隐藏的（`display:none`），有两种常见模式：
 
 - **深澜/Sangfor 系**：可见的 `type="text"` 假占位框 + 隐藏的 `type="password"` 真实密码框
 - **杭州康工 HK Posi 系**：可见的 `readonly` tip 占位框 + 隐藏的真实输入框（账号和密码都隐藏）
 
-普通 `input` 步骤无法对隐藏元素执行 `fill()`。启用 `force` 后会通过 JavaScript 原生 setter 直接设置值并触发 `input`/`change` 事件，绕过可见性检查。如果是 HK Posi 模式，建议额外加一个 `click` 步骤先点击 tip 占位框以触发门户 JS 的状态切换。
+**推荐方案：** 在任务 JSON 顶层添加 `"reveal_hidden": true`，执行器会在填写前自动显示所有隐藏输入框，后续 `input` 步骤无需任何特殊配置即可正常填入。
+
+**自动降级：** 即使不设置 `reveal_hidden`，执行器在普通 `fill()` 失败后也会自动降级到强制输入模式（通过 JS 原生 setter 设置值并触发事件，模拟完整用户交互：focus → clear → set value → input → change → blur），无需额外配置。如果是 HK Posi 模式，建议在输入步骤前加一个 `click` 步骤先点击 tip 占位框以触发门户 JS 的状态切换。
 
 ```json
 {
@@ -110,10 +111,9 @@
 {
   "id": "s2",
   "type": "input",
-  "description": "输入密码（隐藏框，需 force）",
+  "description": "输入密码",
   "selector": "#password",
-  "value": "{{PASSWORD}}",
-  "force": true
+  "value": "{{PASSWORD}}"
 }
 ```
 
@@ -124,7 +124,9 @@
 | 参数 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `selector` | 是 | — | 元素选择器，多个用逗号分隔 |
-| `timeout` | 否 | `5000` | 超时时间（毫秒） |
+| `timeout` | 否 | `10000` | 超时时间（毫秒） |
+
+**自动降级：** 如果普通 click 失败（元素不可见或不可交互），执行器会自动降级到强制模式，通过 JavaScript `dispatch_event('click')` 执行点击。此过程无需手动配置。
 
 ```json
 {
@@ -149,7 +151,7 @@
 |------|------|--------|------|
 | `selector` | 是 | — | 下拉框选择器 |
 | `value` | 是 | — | 选项值，支持变量和模糊匹配 |
-| `timeout` | 否 | `5000` | 超时时间（毫秒） |
+| `timeout` | 否 | `10000` | 超时时间（毫秒） |
 
 ```json
 {
@@ -195,7 +197,7 @@
 | 参数 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `selector` | 是 | — | 等待的元素选择器 |
-| `timeout` | 否 | `5000` | 超时时间（毫秒） |
+| `timeout` | 否 | `10000` | 超时时间（毫秒） |
 
 ```json
 {
@@ -214,7 +216,7 @@
 | 参数 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `pattern` | 是 | — | URL 正则表达式 |
-| `timeout` | 否 | `5000` | 超时时间（毫秒） |
+| `timeout` | 否 | `10000` | 超时时间（毫秒） |
 
 ```json
 {
@@ -228,7 +230,7 @@
 
 ### eval — JavaScript 求值
 
-执行 JavaScript 表达式并可选保存结果到变量。`code` 字段是 `script` 的已废弃别名，仍然支持但建议使用 `script`。
+执行 JavaScript 表达式并可选保存结果到变量。`code` 字段是 `script` 的已废弃别名，仍然支持但建议使用 `script`。`custom_js` 步骤类型已合并到 `eval`，旧任务中的 `custom_js` 仍会被自动映射到 `eval` 执行。
 
 | 参数 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
@@ -245,24 +247,7 @@
 }
 ```
 
-> **安全提示：** 包含 `eval` 或 `custom_js` 步骤的任务在 Web 控制台保存时会弹出安全确认对话框，显示待执行的代码内容，需要用户明确确认。
-
-### custom_js — 执行 JavaScript
-
-执行自定义 JavaScript 代码（不返回值）。`code` 字段是 `script` 的已废弃别名。
-
-| 参数 | 必填 | 默认值 | 说明 |
-|------|------|--------|------|
-| `script` | 是 | — | JavaScript 代码 |
-
-```json
-{
-  "id": "s7",
-  "type": "custom_js",
-  "description": "勾选同意协议",
-  "script": "document.querySelector('#agree').click();"
-}
-```
+> **安全提示：** 包含 `eval` 步骤的任务在 Web 控制台保存时会弹出安全确认对话框，显示待执行的代码内容，需要用户明确确认。
 
 ### screenshot — 截图
 
@@ -298,7 +283,7 @@
 | `target_selector` | 否 | — | 验证码输入框选择器，识别后自动填入 |
 | `store_as` | 否 | — | 识别结果存储到的变量名 |
 | `timeout` | 否 | `10000` | 超时时间（毫秒） |
-| `frame` | 否 | — | 验证码所在的 frame |
+| `frame` | 否 | — | 验证码所在的 frame（字符串，不支持布尔值），可选值为 frame name、URL 片段或 CSS 选择器 |
 | `old` | 否 | `false` | 使用旧版 OCR 模型（见下方说明） |
 
 **关于新旧模型：**
@@ -375,22 +360,11 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
 
 ---
 
-## 成功条件
+## 成功判断
 
-`success_conditions` 为空数组时，所有步骤执行完毕且没有失败即视为成功。此时系统会自动检查页面中是否包含错误关键词（如"失败"、"错误"、"error"等）以及常见的错误 DOM 元素（`.alert-danger`、`.error-msg` 等），如检测到则判定为失败。
+系统统一使用网络连通性检测判断任务成功与否：任务步骤全部完成后，自动检测网络是否可达。网络通 = 认证成功，网络断 = 认证失败。
 
-如需更精确的判定，可组合使用以下条件类型：
-
-| 类型 | 说明 | 示例 |
-|------|------|------|
-| `variable` | 变量值等于指定值 | `{ "type": "variable", "variable": "login_ok", "value": true }` |
-| `url_contains` | 当前 URL 包含字符串 | `{ "type": "url_contains", "pattern": "success" }` |
-| `url_matches` | 当前 URL 匹配正则 | `{ "type": "url_matches", "pattern": "success\|welcome\|home" }` |
-| `element_exists` | 页面存在指定元素 | `{ "type": "element_exists", "selector": ".welcome-message" }` |
-| `js_expression` | JS 表达式返回 truthy | `{ "type": "js_expression", "script": "document.body.innerText.includes('成功')" }` |
-| `skip` | 跳过，不设置额外条件 | `{ "type": "skip" }` — 等价于空数组，步骤完成即成功 |
-
-多个条件全部满足才算成功。典型组合：先用 `eval` 步骤检查页面并存储结果到变量，再用 `variable` 条件判断该变量。
+> **注意：** 原有 `success_conditions` 字段已被废弃，不再参与成功判断。任务文件中无需再添加该字段。
 
 ---
 
@@ -398,9 +372,12 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
 
 部分校园网认证页面使用 `<frameset>` 或 `<iframe>` 嵌套结构，登录表单在子 frame 中。通过步骤的 `frame` 字段指定目标 frame，执行器会自动切换上下文后再查找元素。
 
-`frame` 值可以是：
-- frame 的 `name` 属性（如 `"main"`）
-- URL 匹配字符串（如 `"url=user/unionautologin.do"`）
+`frame` 值必须是字符串，可以是以下三种之一（按优先级依次尝试）：
+- **frame 的 name 属性**，如 `"main"`、`"loginFrame"`
+- **URL 匹配字符串**，如 `"url=user/unionautologin.do"`（匹配 frame.src 包含该片段）
+- **CSS 选择器**，如 `"iframe[name='login']"`、`"#frameId"`、`"frame:nth-of-type(2)"`
+
+> ⚠️ `frame` 不接收布尔值（`true`/`false`）。如果填写 `"frame": true`，系统会忽略该字段并回退到主页面执行。
 
 所有操作类步骤（`input`、`click`、`select`、`wait`、`ocr`）都支持 `frame` 字段。如果指定的 frame 找不到，系统会回退到主页面继续执行（不会直接失败）。
 
@@ -502,17 +479,14 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
       "store_as": "login_success"
     }
   ],
-  "success_conditions": [
-    { "type": "variable", "variable": "login_success", "value": true }
-  ],
-  "on_success": { "message": "登录成功" },
+    "on_success": { "message": "登录成功" },
   "on_failure": { "message": "登录失败", "screenshot": true }
 }
 ```
 
 ### 精简登录任务
 
-利用自动导航和空成功条件的简化任务：
+利用自动导航的简化任务：
 
 ```json
 {
@@ -526,8 +500,7 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
     { "id": "s3", "type": "click", "selector": "#login-btn" },
     { "id": "s4", "type": "sleep", "duration": 3000 }
   ],
-  "success_conditions": [],
-  "on_success": { "message": "登录成功" },
+    "on_success": { "message": "登录成功" },
   "on_failure": { "message": "登录失败", "screenshot": true }
 }
 ```
@@ -553,8 +526,7 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
     { "id": "s4", "type": "click", "selector": "#login-btn" },
     { "id": "s5", "type": "sleep", "duration": 3000 }
   ],
-  "success_conditions": [],
-  "on_success": { "message": "登录成功" },
+    "on_success": { "message": "登录成功" },
   "on_failure": { "message": "登录失败", "screenshot": true }
 }
 ```
@@ -593,66 +565,53 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
     },
     { "id": "s4", "type": "sleep", "duration": 3000 }
   ],
-  "success_conditions": [],
-  "on_success": { "message": "登录成功" },
+    "on_success": { "message": "登录成功" },
   "on_failure": { "message": "登录失败", "screenshot": true }
 }
 ```
 
 ### 带隐藏输入框的登录任务（深澜 / HK Posi 模式）
 
-部分校园网认证页面（深澜/Sangfor、杭州康工 HK Posi）的真实输入框是 `display:none` 的，页面上只有装饰性的 tip/占位元素。需要先 `click` 占位触发门户 JS 显示真实输入框，再用 `force` 填入。
+部分校园网认证页面（深澜/Sangfor、杭州康工 HK Posi）的真实输入框是 `display:none` 的，页面上只有装饰性的 tip/占位元素。
+
+**推荐做法：** 在任务 JSON 顶层添加 `"reveal_hidden": true`，执行器会自动处理所有隐藏输入框，无需在步骤中手动配置 `force` 或添加额外的 `click` 占位步骤。
 
 ```json
 {
   "name": "隐藏输入框登录",
   "description": "适用于深澜/Sangfor 或 HK Posi 隐藏输入框的认证页面",
   "url": "{{LOGIN_URL}}",
+  "reveal_hidden": true,
   "timeout": 30000,
   "steps": [
     {
       "id": "s1",
-      "type": "click",
-      "description": "点击账号占位（触发真实输入框显示）",
-      "selector": "#username_hk_posi"
+      "type": "input",
+      "description": "输入账号",
+      "selector": "#username",
+      "value": "{{USERNAME}}"
     },
     {
       "id": "s2",
       "type": "input",
-      "description": "输入账号（force 模式）",
-      "selector": "#username",
-      "value": "{{USERNAME}}",
-      "force": true
+      "description": "输入密码",
+      "selector": "#password",
+      "value": "{{PASSWORD}}"
     },
     {
       "id": "s3",
       "type": "click",
-      "description": "点击密码占位（触发真实输入框显示）",
-      "selector": "#pwd_hk_posi"
-    },
-    {
-      "id": "s4",
-      "type": "input",
-      "description": "输入密码（force 模式）",
-      "selector": "#password",
-      "value": "{{PASSWORD}}",
-      "force": true
-    },
-    {
-      "id": "s5",
-      "type": "click",
       "description": "点击登录按钮",
       "selector": "#login_button"
     },
-    { "id": "s6", "type": "sleep", "duration": 3000 }
+    { "id": "s4", "type": "sleep", "duration": 3000 }
   ],
-  "success_conditions": [],
   "on_success": { "message": "登录成功" },
   "on_failure": { "message": "登录失败", "screenshot": true }
 }
 ```
 
-> **提示：** Campus-Auth 任务录制器（油猴脚本）的「隐藏检测」开关可以自动识别这种模式，点击占位元素后自动检测隐藏的真实输入框，导出时自动生成上述 click + force 步骤组合。
+> **提示：** Campus-Auth 任务录制器（油猴脚本）的「隐藏检测」开关可以自动识别这种模式，导出时会自动在任务顶层添加 `"reveal_hidden": true`，无需手动干预。
 
 ---
 
@@ -690,9 +649,8 @@ ddddocr 内置两套模型，`old` 参数控制使用哪一套：
 
 ### 成功判定
 
-- 简单场景留空 `success_conditions`，步骤全部完成即为成功
-- 复杂场景建议组合使用 `eval` + `variable` 条件
-- 认证页面会跳转的场景，优先用 `url_contains` 或 `url_matches`
+- 系统统一使用网络检测兜底判断成功，无需配置成功条件
+- 任务 JSON 中无需添加 `success_conditions` 字段
 
 ---
 
@@ -715,14 +673,11 @@ A: 检查以下几点：
 
 **Q: 如何判断登录成功？**
 
-A: 推荐组合使用：
-1. `eval` 步骤检查页面内容，存储结果到变量
-2. `success_conditions` 中检查该变量
-3. 或使用 `url_contains` 检查跳转后的 URL
+A: 系统自动在网络检测成功后判定为登录成功，无需额外配置。网络检测失败通常表示密码错误或运营商不匹配。
 
 **Q: 保存任务时弹出安全警告？**
 
-A: 因为任务中包含 `eval` 或 `custom_js` 步骤，这些步骤可以执行任意 JavaScript 代码。系统会显示代码内容要求确认，确认代码安全后点击确认即可。
+A: 因为任务中包含 `eval` 步骤，该步骤可以执行任意 JavaScript 代码。系统会显示代码内容要求确认，确认代码安全后点击确认即可。
 
 **Q: 内置任务和普通任务有什么区别？**
 
@@ -732,8 +687,8 @@ A: 内置任务是随项目分发的预设任务。你可以在内置任务的�
 
 A: 部分校园网认证页面（深澜/Sangfor、杭州康工 HK Posi）的真实输入框是隐藏的，页面上只显示占位 tip 或假输入框。解决方案：
 
-1. 给 `input` 步骤加上 `"force": true`，绕过可见性检查直接填入
-2. 如果是 HK Posi 模式（readonly tip 占位），建议额外加一个 `click` 步骤先点击占位元素触发门户 JS 切换状态
+1. 在任务 JSON 顶层添加 `"reveal_hidden": true`，执行器会自动显示所有隐藏输入框，后续步骤无需特殊配置
+2. 即使不设置 `reveal_hidden`，执行器也会在普通输入失败时自动降级到强制模式，通常无需手动设置 `force`
 3. 使用 Campus-Auth 任务录制器（油猴脚本）的「隐藏检测」功能，打开 🔍 开关后点击占位区域即可自动识别
 
 详见上方「带隐藏输入框的登录任务」完整示例。
@@ -748,14 +703,13 @@ A: 尝试切换 `ocr` 步骤的 `old` 参数（`true`/`false`），两套模型�
 
 | 类型 | 用途 | 关键参数 | 特殊行为 |
 |------|------|----------|----------|
-| `input` | 输入文本 | `selector`, `value`, `clear`, `force` | `force` 模式绕过可见性，用 JS 填入隐藏输入框 |
+| `input` | 输入文本 | `selector`, `value`, `clear` | 支持 `reveal_hidden` 全局配置，自动处理隐藏输入框 |
 | `click` | 点击元素 | `selector` | — |
 | `select` | 下拉选择 | `selector`, `value` | value 为空或元素不存在时自动跳过；支持模糊匹配 |
 | `click_select` | 点击式选择 | `selector`, `value`, `option_selector`(可选) | 点击触发器后按文字匹配选项；`option_selector` 限定搜索容器 |
 | `wait` | 等待元素 | `selector` | — |
 | `wait_url` | 等待 URL | `pattern` | — |
-| `eval` | JS 求值 | `script`, `store_as` | 结果可存入变量；`code` 为已废弃别名 |
-| `custom_js` | 执行 JS | `script` | 不返回值；`code` 为已废弃别名 |
+| `eval` | JS 求值 | `script`, `store_as` | 结果可存入变量；`code` 为已废弃别名；`custom_js` 已合并到此类型 |
 | `screenshot` | 截图 | `path` | — |
 | `sleep` | 休眠 | `duration` | 最大 300000ms |
 | `ocr` | 验证码识别 | `selector`, `target_selector`, `store_as`, `old` | 支持新旧模型切换 |
@@ -768,19 +722,7 @@ A: 尝试切换 `ocr` 步骤的 `old` 参数（`true`/`false`），两套模型�
 
 如果你编写了一个适用于特定校园网的认证任务，欢迎将它分享给社区！分享的任务会收录在 [Campus-Auth 任务仓库](https://github.com/Misyra/campus-auth-tasks)，其他用户可以直接从仓库导入使用。
 
-### 分享前必填信息确认
-
-在分享任务前，如果 `metadata` 中的以下信息缺失，**必须先向用户确认**：
-
-| 信息 | 说明 |
-|------|------|
-| 学校名称 | 任务所属的学校/单位，填写到 `metadata.school` |
-| 认证设备型号 | 如 Dr.COM、深澜、杭州康工 HK Posi 等，填写到 `metadata.device` |
-| 作者署名 | 填写到 `metadata.author` |
-
-> ⚠️ **严禁无证据猜测**：不得根据页面 URL、页面内容或任务结构推测学校名称或设备型号，必须由用户明确提供。用户也无法确认的，相关字段标注为"未知"。
-
-### 分享方式
+**分享方式：**
 
 - **快速分享**：在 Web 控制台导出任务 JSON，到 [Issues](https://github.com/Misyra/campus-auth-tasks/issues/new) 提交
 - **提交 PR**：Fork 仓库 → 添加任务文件 → 提交 Pull Request，详见 [任务仓库贡献指南](https://github.com/Misyra/campus-auth-tasks#贡献)
